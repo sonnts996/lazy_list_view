@@ -3,6 +3,7 @@
  Copyright (c) 2021 . All rights reserved.
 */
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/gestures.dart';
 import 'package:lazy_listview/interface/base_lazy_list_view.dart';
 import 'package:lazy_listview/models/functions.dart';
 import 'package:lazy_listview/models/lazy_state.dart';
@@ -17,28 +18,54 @@ class LazyListView extends BaseLazyListView {
     ControlFunction? onReachEnd,
     ControlFunction? onReachStart,
     RefreshCallback? onRefresh,
-    LazyPointerMode pointerMode = LazyPointerMode.auto,
+    LazyScrollBackMode pointerMode = LazyScrollBackMode.auto,
     double pointerMargin = 30,
     double offset = 30,
     bool reverse = false,
-    required final Widget child,
-    required final LazyState state,
-    required final ScrollController scrollController,
+    required  ScrollController scrollController,
+    ScrollController? controller,
+    bool? primary,
+    ScrollPhysics? physics,
+    bool shrinkWrap = false,
+    EdgeInsetsGeometry? padding,
+    required IndexedWidgetBuilder itemBuilder,
+    IndexedWidgetBuilder? separatorBuilder,
+    required int itemCount,
+    bool addAutomaticKeepAlives = true,
+    bool addRepaintBoundaries = true,
+    bool addSemanticIndexes = true,
+    double? cacheExtent,
+    DragStartBehavior dragStartBehavior = DragStartBehavior.start,
+    ScrollViewKeyboardDismissBehavior keyboardDismissBehavior =
+        ScrollViewKeyboardDismissBehavior.manual,
+    String? restorationId,
+    Clip clipBehavior = Clip.hardEdge,
   }) : super(
           key: key,
-          reachBottomBuilder: reachEndBuilder,
-          reachTopBuilder: reachStartBuilder,
-          pointToBuilder: pointToBuilder,
+          reachEndBuilder: reachEndBuilder,
+          reachStartBuilder: reachStartBuilder,
+          scrollBackButtonBuilder: pointToBuilder,
           onReachEnd: onReachEnd,
           onRefresh: onRefresh,
           onReachStart: onReachStart,
-          pointerMode: pointerMode,
-          child: child,
-          pointerMargin: pointerMargin,
+          scrollBackMode: pointerMode,
+          scrollBackButtonMargin: pointerMargin,
           offset: offset,
           scrollController: scrollController,
-          state: state,
           reverse: reverse,
+          itemBuilder: itemBuilder,
+          separatorBuilder: separatorBuilder,
+          itemCount: itemCount,
+          physics: physics,
+          padding: padding,
+          addAutomaticKeepAlives: addAutomaticKeepAlives,
+          addRepaintBoundaries: addRepaintBoundaries,
+          addSemanticIndexes: addSemanticIndexes,
+          cacheExtent: cacheExtent,
+          dragStartBehavior: dragStartBehavior,
+          keyboardDismissBehavior: keyboardDismissBehavior,
+          restorationId: restorationId,
+          clipBehavior: clipBehavior,
         );
 
   @override

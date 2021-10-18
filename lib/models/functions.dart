@@ -9,8 +9,8 @@ import 'package:lazy_listview/lazy_list_view.dart';
 typedef ControlFunction = Future<bool> Function();
 typedef PointerBuilder = Widget Function(
   BuildContext context,
-  LazyPointerState mode,
+  LazyScrollState mode,
   double position,
 );
 
-typedef PointerFunction = Future<bool> Function(LazyPointerState mode);
+typedef PointerFunction = Future<bool> Function(LazyScrollState mode);

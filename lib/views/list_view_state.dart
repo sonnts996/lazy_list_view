@@ -8,6 +8,7 @@ import 'package:flutter/rendering.dart';
 import 'package:lazy_listview/interface/base_lazy_state.dart';
 import 'package:lazy_listview/models/lazy_state.dart';
 import 'package:lazy_listview/models/pointer.dart';
+import 'package:lazy_listview/widgets/list_widget.dart';
 import 'package:lazy_listview/widgets/pointer_widget.dart';
 import 'package:lazy_listview/widgets/reach_widget.dart';
 import 'package:lazy_listview/widgets/stability_widget.dart';
@@ -16,16 +17,9 @@ class LazyListViewState extends BaseLazyListViewState {
   bool _waiting = false;
   bool _waitingPointer = false;
   ValueNotifier<Pointer> pointerAlignNotifier = ValueNotifier(Pointer());
+  ValueNotifier<LazyState> reachNotifier = ValueNotifier(LazyState.none);
 
-  @override
-  void scrollToBottom() {
-    // TODO: implement scrollToBottom
-  }
 
-  @override
-  void scrollToTop() {
-    // TODO: implement scrollToTop
-  }
 
   @override
   void initState() {
@@ -37,40 +31,62 @@ class LazyListViewState extends BaseLazyListViewState {
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
-    switch (widget.state) {
-      case LazyState.reachBottom:
-        // TODO: Handle this case.
-        return ReachWidget(
-          scrollController: widget.scrollController,
-          reachBuilder: widget.reachBottomBuilder,
-          child: widget.child,
-          reachTop: false,
-          onRefresh: widget.onRefresh,
-        );
-      case LazyState.reachTop:
-        // TODO: Handle this case.
-        return ReachWidget(
-          scrollController: widget.scrollController,
-          reachBuilder: widget.reachTopBuilder,
-          child: widget.child,
-          reachTop: false,
-          onRefresh: widget.onRefresh,
-        );
-      case LazyState.stability:
-        // TODO: Handle this case.
-        if (widget.pointerMode == LazyPointerMode.never) {
-          return StabilityView(
-            child: widget.child,
-            onRefresh: widget.onRefresh,
-          );
-        } else {
-          return PointerWidget(
-            child: widget.child,
-            pointerBuilder: widget.pointToBuilder,
-            pointNotifier: pointerAlignNotifier,
-            onRefresh: widget.onRefresh,
-          );
-        }
+    var listView;
+    if ((widget.reachEndBuilder != null || widget.reachStartBuilder != null) &&
+        widget.itemCount > 0) {
+      listView = ReachWidget(
+        reachEndBuilder: widget.reachEndBuilder,
+        reachStartBuilder: widget.reachStartBuilder,
+        onRefresh: widget.onRefresh,
+        reachNotifier: reachNotifier,
+        // listview
+        controller: widget.scrollController,
+        itemBuilder: widget.itemBuilder,
+        itemCount: widget.itemCount,
+        separatorBuilder: widget.separatorBuilder,
+        reverse: widget.reverse,
+        physics: widget.physics,
+        padding: widget.padding,
+        addAutomaticKeepAlives: widget.addAutomaticKeepAlives,
+        addRepaintBoundaries: widget.addRepaintBoundaries,
+        addSemanticIndexes: widget.addSemanticIndexes,
+        cacheExtent: widget.cacheExtent,
+        dragStartBehavior: widget.dragStartBehavior,
+        keyboardDismissBehavior: widget.keyboardDismissBehavior,
+        restorationId: widget.restorationId,
+        clipBehavior: widget.clipBehavior,
+      );
+    } else {
+      listView = MainListView(
+        controller: widget.scrollController,
+        itemBuilder: widget.itemBuilder,
+        itemCount: widget.itemCount,
+        separatorBuilder: widget.separatorBuilder,
+        reverse: widget.reverse,
+        physics: widget.physics,
+        padding: widget.padding,
+        addAutomaticKeepAlives: widget.addAutomaticKeepAlives,
+        addRepaintBoundaries: widget.addRepaintBoundaries,
+        addSemanticIndexes: widget.addSemanticIndexes,
+        cacheExtent: widget.cacheExtent,
+        dragStartBehavior: widget.dragStartBehavior,
+        keyboardDismissBehavior: widget.keyboardDismissBehavior,
+        restorationId: widget.restorationId,
+        clipBehavior: widget.clipBehavior,
+      );
+    }
+    if (widget.scrollBackMode == LazyScrollBackMode.never) {
+      return StabilityView(
+        child: listView,
+        onRefresh: widget.onRefresh,
+      );
+    } else {
+      return PointerWidget(
+        child: listView,
+        pointerBuilder: widget.scrollBackButtonBuilder,
+        pointNotifier: pointerAlignNotifier,
+        onRefresh: widget.onRefresh,
+      );
     }
   }
 
@@ -78,25 +94,25 @@ class LazyListViewState extends BaseLazyListViewState {
     var position = widget.scrollController.position;
     if (!_waitingPointer) {
       _waitingPointer = true;
-      if (widget.pointerMode == LazyPointerMode.auto) {
+      if (widget.scrollBackMode == LazyScrollBackMode.auto) {
         if (position.extentAfter == 0 || position.extentBefore == 0) {
           _clearPointer();
         } else if (position.userScrollDirection == ScrollDirection.reverse) {
-          _point2Direct(LazyDirect.bottom, widget.pointerMargin);
+          _point2Direct(LazyDirect.bottom, widget.scrollBackButtonMargin);
         } else if (position.userScrollDirection == ScrollDirection.forward) {
-          _point2Direct(LazyDirect.top, widget.pointerMargin);
+          _point2Direct(LazyDirect.top, widget.scrollBackButtonMargin);
         }
-      } else if (widget.pointerMode == LazyPointerMode.toStart) {
+      } else if (widget.scrollBackMode == LazyScrollBackMode.toStart) {
         if (position.extentBefore == 0) {
           _clearPointer();
         } else {
-          _point2Direct(LazyDirect.top, widget.pointerMargin);
+          _point2Direct(LazyDirect.top, widget.scrollBackButtonMargin);
         }
-      } else if (widget.pointerMode == LazyPointerMode.toEnd) {
+      } else if (widget.scrollBackMode == LazyScrollBackMode.toEnd) {
         if (position.extentAfter == 0) {
           _clearPointer();
         } else {
-          _point2Direct(LazyDirect.bottom, widget.pointerMargin);
+          _point2Direct(LazyDirect.bottom, widget.scrollBackButtonMargin);
         }
       } else {
         _waitingPointer = false;
@@ -105,11 +121,20 @@ class LazyListViewState extends BaseLazyListViewState {
     if (!_waiting) {
       _waiting = true;
       if (widget.onReachEnd != null && position.extentAfter <= widget.offset) {
-        widget.onReachEnd!().then((value) => _waiting = !value);
+        reachNotifier.value = LazyState.reachEnd;
+        widget.onReachEnd!().then((value) {
+          _waiting = !value;
+          reachNotifier.value = LazyState.none;
+        });
       } else if (widget.onReachStart != null &&
           position.extentBefore <= widget.offset) {
-        widget.onReachStart!().then((value) => _waiting = !value);
+        reachNotifier.value = LazyState.reachStart;
+        widget.onReachStart!().then((value) {
+          _waiting = !value;
+          reachNotifier.value = LazyState.none;
+        });
       } else {
+        reachNotifier.value = LazyState.none;
         _waiting = false;
       }
     }
@@ -117,7 +142,7 @@ class LazyListViewState extends BaseLazyListViewState {
 
   void _autoPointerToTop(double offset) {
     pointerAlignNotifier.value = Pointer(
-      state: LazyPointerState.pointToTop,
+      state: LazyScrollState.pointToTop,
       position: offset,
     );
 
@@ -126,7 +151,7 @@ class LazyListViewState extends BaseLazyListViewState {
 
   void _autoPointerToBottom(double offset) {
     pointerAlignNotifier.value = Pointer(
-      state: LazyPointerState.pointToBottom,
+      state: LazyScrollState.pointToBottom,
       position: offset,
     );
     _waitingPointer = false;
@@ -158,4 +183,23 @@ class LazyListViewState extends BaseLazyListViewState {
     }
   }
 
+  @override
+  void clearReach() {
+    // TODO: implement clearReach
+  }
+
+  @override
+  void scrollTo(double position) {
+    // TODO: implement scrollTo
+  }
+
+  @override
+  void scrollToStart() {
+    // TODO: implement scrollToBottom
+  }
+
+  @override
+  void scrollToEnd() {
+    // TODO: implement scrollToTop
+  }
 }

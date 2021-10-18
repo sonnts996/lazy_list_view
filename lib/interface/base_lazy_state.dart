@@ -6,7 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:lazy_listview/interface/base_lazy_list_view.dart';
 
 abstract class BaseLazyListViewState extends State<BaseLazyListView> {
-  void scrollToBottom();
+  void scrollToStart();
 
-  void scrollToTop();
+  void scrollToEnd();
+
+  void scrollTo(double position);
+
+  void clearReach();
 }

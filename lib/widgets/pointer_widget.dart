@@ -37,7 +37,7 @@ class PointerWidget extends StatelessWidget {
                 valueListenable: pointNotifier,
                 builder: (context, value, child) {
                   return Visibility(
-                      visible: value.state != LazyPointerState.none,
+                      visible: value.state != LazyScrollState.none,
                       child: Positioned(
                         child: pointerBuilder!(
                             context, value.state, value.position),

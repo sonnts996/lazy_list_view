@@ -49,7 +49,6 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   ScrollController _scrollController = ScrollController(keepScrollOffset: true);
-  LazyState state = LazyState.reachBottom;
 
   @override
   Widget build(BuildContext context) {
@@ -67,30 +66,32 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
         body: LazyListView(
           scrollController: _scrollController,
-          state: state,
-          pointerMode: LazyPointerMode.auto,
+          pointerMode: LazyScrollBackMode.auto,
           reverse: true,
           onReachEnd: () async {
-            // setState(() {
-            //   state = LazyState.reachBottom;
-            // });
-            return true;
+            return Future.delayed(Duration(seconds: 10), () => true);
           },
           reachEndBuilder: (context) => Container(
             child: CircularProgressIndicator(),
             height: 30,
+            width: 30,
           ),
+          reachStartBuilder: (context) => Container(
+            child: CircularProgressIndicator(),
+            height: 30,
+            width: 30,
+          ),
+          onReachStart: () async {
+            return Future.delayed(Duration(seconds: 5), () => true);
+          },
           pointToBuilder: (context, mode, position) => CircleAvatar(
-            child: Icon(mode == LazyPointerState.pointToTop
+            child: Icon(mode == LazyScrollState.pointToTop
                 ? Icons.arrow_circle_down_rounded
                 : Icons.arrow_circle_up_rounded),
           ),
-          child: ListView.builder(
-            controller: _scrollController,
-            reverse: true,
-            itemBuilder: (context, index) => ItemView(index: index),
-            itemCount: 50,
-          ),
+          controller: _scrollController,
+          itemBuilder: (context, index) => ItemView(index: index),
+          itemCount: 50,
         ));
   }
 }

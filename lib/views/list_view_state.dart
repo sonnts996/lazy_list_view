@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:lazy_listview/interface/base_lazy_state.dart';
 import 'package:lazy_listview/models/lazy_state.dart';
-import 'package:lazy_listview/models/scrollback_state.dart';
 import 'package:lazy_listview/widgets/list_widget.dart';
 import 'package:lazy_listview/widgets/reach_widget.dart';
 import 'package:lazy_listview/widgets/scrollback_widget.dart';

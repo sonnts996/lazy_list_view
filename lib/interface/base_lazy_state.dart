@@ -6,11 +6,16 @@ import 'package:flutter/material.dart';
 import 'package:lazy_listview/interface/base_lazy_list_view.dart';
 
 abstract class BaseLazyListViewState extends State<BaseLazyListView> {
-  void scrollToStart();
 
-  void scrollToEnd();
+  // scroll to start of list
+  void scrollToStart([bool animate = true]);
 
-  void scrollTo(double position);
+  // scroll to end of list
+  void scrollToEnd([bool animate = true]);
 
+  // scroll to a position of list
+  void scrollTo(double position, [bool animate = true]);
+
+  // clear reach state, hide reach widget
   void clearReach();
 }

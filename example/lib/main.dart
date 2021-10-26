@@ -1,5 +1,6 @@
 import 'package:example/item_view.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:lazy_listview/lazy_list_view.dart';
 
 void main() {
@@ -66,7 +67,7 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
         body: LazyListView(
           scrollController: _scrollController,
-          pointerMode: LazyScrollBackMode.auto,
+          scrollBackMode: ScrollBackMode.auto,
           reverse: true,
           onReachEnd: () async {
             return Future.delayed(Duration(seconds: 10), () => true);
@@ -84,11 +85,13 @@ class _MyHomePageState extends State<MyHomePage> {
           onReachStart: () async {
             return Future.delayed(Duration(seconds: 5), () => true);
           },
-          pointToBuilder: (context, mode, position) => CircleAvatar(
-            child: Icon(mode == LazyScrollState.pointToTop
-                ? Icons.arrow_circle_down_rounded
-                : Icons.arrow_circle_up_rounded),
-          ),
+          scrollBackBuilder: (context, direction) => LazyScrollBack(
+              widget: CircleAvatar(
+                child: Icon(direction == ScrollDirection.forward
+                    ? Icons.arrow_circle_down_rounded
+                    : Icons.arrow_circle_up_rounded),
+              ),
+              position: LazyPosition(top: 30, right: 0)),
           controller: _scrollController,
           itemBuilder: (context, index) => ItemView(index: index),
           itemCount: 50,

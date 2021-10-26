@@ -7,19 +7,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:lazy_listview/interface/base_lazy_state.dart';
 import 'package:lazy_listview/models/lazy_state.dart';
-import 'package:lazy_listview/models/pointer.dart';
+import 'package:lazy_listview/models/scrollback_state.dart';
 import 'package:lazy_listview/widgets/list_widget.dart';
-import 'package:lazy_listview/widgets/pointer_widget.dart';
 import 'package:lazy_listview/widgets/reach_widget.dart';
+import 'package:lazy_listview/widgets/scrollback_widget.dart';
 import 'package:lazy_listview/widgets/stability_widget.dart';
 
 class LazyListViewState extends BaseLazyListViewState {
   bool _waiting = false;
-  bool _waitingPointer = false;
-  ValueNotifier<Pointer> pointerAlignNotifier = ValueNotifier(Pointer());
-  ValueNotifier<LazyState> reachNotifier = ValueNotifier(LazyState.none);
-
-
+  ValueNotifier<ScrollDirection?> _scrollBackNotifier = ValueNotifier(null);
+  ValueNotifier<LazyState> _reachNotifier = ValueNotifier(LazyState.none);
 
   @override
   void initState() {
@@ -38,7 +35,7 @@ class LazyListViewState extends BaseLazyListViewState {
         reachEndBuilder: widget.reachEndBuilder,
         reachStartBuilder: widget.reachStartBuilder,
         onRefresh: widget.onRefresh,
-        reachNotifier: reachNotifier,
+        reachNotifier: _reachNotifier,
         // listview
         controller: widget.scrollController,
         itemBuilder: widget.itemBuilder,
@@ -75,16 +72,16 @@ class LazyListViewState extends BaseLazyListViewState {
         clipBehavior: widget.clipBehavior,
       );
     }
-    if (widget.scrollBackMode == LazyScrollBackMode.never) {
+    if (widget.scrollBackMode == ScrollBackMode.never) {
       return StabilityView(
         child: listView,
         onRefresh: widget.onRefresh,
       );
     } else {
-      return PointerWidget(
+      return ScrollBackWidget(
         child: listView,
-        pointerBuilder: widget.scrollBackButtonBuilder,
-        pointNotifier: pointerAlignNotifier,
+        scrollBackBuilder: widget.scrollBackButtonBuilder,
+        pointNotifier: _scrollBackNotifier,
         onRefresh: widget.onRefresh,
       );
     }
@@ -92,114 +89,85 @@ class LazyListViewState extends BaseLazyListViewState {
 
   void _listener() {
     var position = widget.scrollController.position;
-    if (!_waitingPointer) {
-      _waitingPointer = true;
-      if (widget.scrollBackMode == LazyScrollBackMode.auto) {
-        if (position.extentAfter == 0 || position.extentBefore == 0) {
-          _clearPointer();
-        } else if (position.userScrollDirection == ScrollDirection.reverse) {
-          _point2Direct(LazyDirect.bottom, widget.scrollBackButtonMargin);
-        } else if (position.userScrollDirection == ScrollDirection.forward) {
-          _point2Direct(LazyDirect.top, widget.scrollBackButtonMargin);
-        }
-      } else if (widget.scrollBackMode == LazyScrollBackMode.toStart) {
-        if (position.extentBefore == 0) {
-          _clearPointer();
-        } else {
-          _point2Direct(LazyDirect.top, widget.scrollBackButtonMargin);
-        }
-      } else if (widget.scrollBackMode == LazyScrollBackMode.toEnd) {
-        if (position.extentAfter == 0) {
-          _clearPointer();
-        } else {
-          _point2Direct(LazyDirect.bottom, widget.scrollBackButtonMargin);
-        }
+    if (widget.scrollBackMode == ScrollBackMode.auto) {
+      if (position.extentAfter <= widget.offset ||
+          position.extentBefore <= widget.offset) {
+        _clearScrollBackWidget();
+      } else if (position.userScrollDirection == ScrollDirection.reverse ||
+          position.userScrollDirection == ScrollDirection.forward) {
+        _point2Direct(position.userScrollDirection);
+      }
+    } else if (widget.scrollBackMode == ScrollBackMode.toStart) {
+      if (position.extentBefore <= widget.offset) {
+        _clearScrollBackWidget();
       } else {
-        _waitingPointer = false;
+        _point2Direct(ScrollDirection.forward);
+      }
+    } else if (widget.scrollBackMode == ScrollBackMode.toEnd) {
+      if (position.extentAfter <= widget.offset) {
+        _clearScrollBackWidget();
+      } else {
+        _point2Direct(ScrollDirection.reverse);
       }
     }
+
     if (!_waiting) {
       _waiting = true;
       if (widget.onReachEnd != null && position.extentAfter <= widget.offset) {
-        reachNotifier.value = LazyState.reachEnd;
+        _reachNotifier.value = LazyState.reachEnd;
         widget.onReachEnd!().then((value) {
           _waiting = !value;
-          reachNotifier.value = LazyState.none;
+          _reachNotifier.value = LazyState.none;
         });
       } else if (widget.onReachStart != null &&
           position.extentBefore <= widget.offset) {
-        reachNotifier.value = LazyState.reachStart;
+        _reachNotifier.value = LazyState.reachStart;
         widget.onReachStart!().then((value) {
           _waiting = !value;
-          reachNotifier.value = LazyState.none;
+          _reachNotifier.value = LazyState.none;
         });
       } else {
-        reachNotifier.value = LazyState.none;
+        _reachNotifier.value = LazyState.none;
         _waiting = false;
       }
     }
   }
 
-  void _autoPointerToTop(double offset) {
-    pointerAlignNotifier.value = Pointer(
-      state: LazyScrollState.pointToTop,
-      position: offset,
-    );
-
-    _waitingPointer = false;
+  void _clearScrollBackWidget() {
+    _scrollBackNotifier.value = null;
   }
 
-  void _autoPointerToBottom(double offset) {
-    pointerAlignNotifier.value = Pointer(
-      state: LazyScrollState.pointToBottom,
-      position: offset,
-    );
-    _waitingPointer = false;
-  }
-
-  void _clearPointer() {
-    pointerAlignNotifier.value = Pointer();
-    _waitingPointer = false;
-  }
-
-  void _point2Direct(LazyDirect direct, double offset) {
-    switch (direct) {
-      case LazyDirect.top:
-        // TODO: Handle this case.
-        if (widget.reverse) {
-          _autoPointerToTop(offset);
-        } else {
-          _autoPointerToBottom(offset);
-        }
-        break;
-      case LazyDirect.bottom:
-        // TODO: Handle this case.
-        if (widget.reverse) {
-          _autoPointerToBottom(offset);
-        } else {
-          _autoPointerToTop(offset);
-        }
-        break;
-    }
+  void _point2Direct(ScrollDirection direct) {
+    _scrollBackNotifier.value =  direct;
   }
 
   @override
   void clearReach() {
     // TODO: implement clearReach
+    _reachNotifier.value = LazyState.none;
+    _waiting = false;
   }
 
   @override
-  void scrollTo(double position) {
+  void scrollTo(double position, [bool animate = true]) {
     // TODO: implement scrollTo
+    if (animate) {
+      widget.scrollController.animateTo(position,
+          duration: Duration(milliseconds: 350), curve: Curves.easeInOut);
+    } else {
+      widget.scrollController.jumpTo(position);
+    }
   }
 
   @override
-  void scrollToStart() {
-    // TODO: implement scrollToBottom
+  void scrollToEnd([bool animate = true]) {
+    // TODO: implement scrollToEnd
+    scrollTo(widget.scrollController.position.viewportDimension, animate);
   }
 
   @override
-  void scrollToEnd() {
-    // TODO: implement scrollToTop
+  void scrollToStart([bool animate = true]) {
+    // TODO: implement scrollToStart
+    scrollTo(0, animate);
   }
 }

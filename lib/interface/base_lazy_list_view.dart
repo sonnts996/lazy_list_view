@@ -9,18 +9,41 @@ import 'package:lazy_listview/models/lazy_state.dart';
 
 abstract class BaseLazyListView extends StatefulWidget {
 
-  final ScrollController scrollController;
+  /// the limit value at which the scroll position executes the functions
   final double offset;
+
+  /// return the reach end widget, null if don't use it
   final WidgetBuilder? reachEndBuilder;
+
+  /// return the reach start widget, null if don't use it
   final WidgetBuilder? reachStartBuilder;
+
+  /// the function is called when the scroll position reaches
+  /// a value in the offset at the end of the list.
+  /// reach end state will be ignored when this object null.
   final ControlFunction? onReachEnd;
+
+  /// the function is called when the scroll position reaches
+  /// a value in the offset at the start of the list.
+  /// reach start state will be ignored when this object null.
   final ControlFunction? onReachStart;
+
+  /// the function is called when the refresh indicator action
+  /// the refresh indicator will be ignored when this object null.
   final RefreshCallback? onRefresh;
 
-  final LazyScrollBackMode scrollBackMode;
-  final PointerBuilder? scrollBackButtonBuilder;
-  final EdgeInsets scrollBackButtonMargin;
+  /// mode of scroll back
+  final ScrollBackMode scrollBackMode;
+
+  /// the widget display when the scroll back is active - outside the value of offset
+  final ScrollBackBuilder? scrollBackButtonBuilder;
+
+  /// scroll back widget alignment in stack
   final Alignment scrollBackButtonAlignment;
+
+  /// listview controller field
+  /// request to check the scrolling state of the list
+  final ScrollController scrollController;
 
   /// listview reverse field
   final bool reverse;
@@ -80,9 +103,8 @@ abstract class BaseLazyListView extends StatefulWidget {
     this.onRefresh,
     this.onReachStart,
     this.onReachEnd,
-    this.scrollBackMode = LazyScrollBackMode.auto,
+    this.scrollBackMode = ScrollBackMode.auto,
     this.scrollBackButtonAlignment = Alignment.bottomCenter,
-    this.scrollBackButtonMargin = EdgeInsets.zero,
     this.reverse = false,
     this.physics,
     this.padding,

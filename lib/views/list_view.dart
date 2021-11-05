@@ -4,7 +4,7 @@
 */
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
-import 'package:lazy_listview/interface/base_lazy_list_view.dart';
+import 'package:lazy_listview/interface/lazy_list_view.base.dart';
 import 'package:lazy_listview/models/functions.dart';
 import 'package:lazy_listview/models/lazy_state.dart';
 import 'package:lazy_listview/views/list_view_state.dart';
@@ -14,8 +14,8 @@ class LazyListView extends BaseLazyListView {
     Key? key,
     WidgetBuilder? reachEndBuilder,
     WidgetBuilder? reachStartBuilder,
-    ControlFunction? onReachEnd,
-    ControlFunction? onReachStart,
+    LazyReachFunction? onReachEnd,
+    LazyReachFunction? onReachStart,
     RefreshCallback? onRefresh,
     ScrollBackBuilder? scrollBackBuilder,
     ScrollBackMode scrollBackMode = ScrollBackMode.auto,
@@ -23,7 +23,6 @@ class LazyListView extends BaseLazyListView {
     double offset = 30,
     bool reverse = false,
     required ScrollController scrollController,
-    ScrollController? controller,
     bool? primary,
     ScrollPhysics? physics,
     bool shrinkWrap = false,
@@ -48,7 +47,7 @@ class LazyListView extends BaseLazyListView {
           onRefresh: onRefresh,
           onReachStart: onReachStart,
           scrollBackMode: scrollBackMode,
-          scrollBackButtonBuilder: scrollBackBuilder,
+          scrollBackBuilder: scrollBackBuilder,
           scrollBackButtonAlignment: scrollBackButtonAlignment,
           offset: offset,
           scrollController: scrollController,

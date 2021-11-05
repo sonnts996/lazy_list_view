@@ -4,17 +4,15 @@
 */
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:lazy_listview/interface/base_lazy_state.dart';
+import 'package:lazy_listview/interface/lazy_action.dart';
+import 'package:lazy_listview/lazy_list_view.dart';
 import 'package:lazy_listview/models/lazy_state.dart';
+import 'package:lazy_listview/views/scroll_view.dart';
 import 'package:lazy_listview/widgets/list_widget.dart';
 import 'package:lazy_listview/widgets/reach_widget.dart';
-import 'package:lazy_listview/widgets/scrollback_widget.dart';
-import 'package:lazy_listview/widgets/stability_widget.dart';
 
-class LazyListViewState extends BaseLazyListViewState {
+class LazyListViewState extends State<LazyListView> with LazyReachAction {
   bool _waiting = false;
-  ValueNotifier<ScrollDirection?> _scrollBackNotifier = ValueNotifier(null);
   ValueNotifier<LazyState> _reachNotifier = ValueNotifier(LazyState.none);
 
   @override
@@ -27,10 +25,26 @@ class LazyListViewState extends BaseLazyListViewState {
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
-    var listView;
+
+    return LazyScrollView(
+      reachEndBuilder: widget.reachEndBuilder,
+      reachStartBuilder: widget.reachStartBuilder,
+      onReachEnd: widget.onReachEnd,
+      onRefresh: widget.onRefresh,
+      onReachStart: widget.onReachStart,
+      scrollBackMode: widget.scrollBackMode,
+      scrollBackBuilder: widget.scrollBackBuilder,
+      scrollBackButtonAlignment: widget.scrollBackButtonAlignment,
+      offset: widget.offset,
+      scrollController: widget.scrollController,
+      child: _buildListView(),
+    );
+  }
+
+  Widget _buildListView() {
     if ((widget.reachEndBuilder != null || widget.reachStartBuilder != null) &&
         widget.itemCount > 0) {
-      listView = ReachWidget(
+      return ReachWidget(
         reachEndBuilder: widget.reachEndBuilder,
         reachStartBuilder: widget.reachStartBuilder,
         onRefresh: widget.onRefresh,
@@ -53,7 +67,7 @@ class LazyListViewState extends BaseLazyListViewState {
         clipBehavior: widget.clipBehavior,
       );
     } else {
-      listView = MainListView(
+      return MainListView(
         controller: widget.scrollController,
         itemBuilder: widget.itemBuilder,
         itemCount: widget.itemCount,
@@ -69,46 +83,16 @@ class LazyListViewState extends BaseLazyListViewState {
         keyboardDismissBehavior: widget.keyboardDismissBehavior,
         restorationId: widget.restorationId,
         clipBehavior: widget.clipBehavior,
-      );
-    }
-    if (widget.scrollBackMode == ScrollBackMode.never) {
-      return StabilityView(
-        child: listView,
-        onRefresh: widget.onRefresh,
-      );
-    } else {
-      return ScrollBackWidget(
-        child: listView,
-        scrollBackBuilder: widget.scrollBackButtonBuilder,
-        pointNotifier: _scrollBackNotifier,
-        onRefresh: widget.onRefresh,
+        shrinkWrap: widget.shrinkWrap,
+        itemExtent: widget.itemExtent,
+        scrollDirection: widget.scrollDirection,
+        primary: widget.primary,
       );
     }
   }
 
   void _listener() {
     var position = widget.scrollController.position;
-    if (widget.scrollBackMode == ScrollBackMode.auto) {
-      if (position.extentAfter <= widget.offset ||
-          position.extentBefore <= widget.offset) {
-        _clearScrollBackWidget();
-      } else if (position.userScrollDirection == ScrollDirection.reverse ||
-          position.userScrollDirection == ScrollDirection.forward) {
-        _point2Direct(position.userScrollDirection);
-      }
-    } else if (widget.scrollBackMode == ScrollBackMode.toStart) {
-      if (position.extentBefore <= widget.offset) {
-        _clearScrollBackWidget();
-      } else {
-        _point2Direct(ScrollDirection.forward);
-      }
-    } else if (widget.scrollBackMode == ScrollBackMode.toEnd) {
-      if (position.extentAfter <= widget.offset) {
-        _clearScrollBackWidget();
-      } else {
-        _point2Direct(ScrollDirection.reverse);
-      }
-    }
 
     if (!_waiting) {
       _waiting = true;
@@ -132,41 +116,10 @@ class LazyListViewState extends BaseLazyListViewState {
     }
   }
 
-  void _clearScrollBackWidget() {
-    _scrollBackNotifier.value = null;
-  }
-
-  void _point2Direct(ScrollDirection direct) {
-    _scrollBackNotifier.value =  direct;
-  }
-
   @override
   void clearReach() {
     // TODO: implement clearReach
     _reachNotifier.value = LazyState.none;
     _waiting = false;
-  }
-
-  @override
-  void scrollTo(double position, [bool animate = true]) {
-    // TODO: implement scrollTo
-    if (animate) {
-      widget.scrollController.animateTo(position,
-          duration: Duration(milliseconds: 350), curve: Curves.easeInOut);
-    } else {
-      widget.scrollController.jumpTo(position);
-    }
-  }
-
-  @override
-  void scrollToEnd([bool animate = true]) {
-    // TODO: implement scrollToEnd
-    scrollTo(widget.scrollController.position.viewportDimension, animate);
-  }
-
-  @override
-  void scrollToStart([bool animate = true]) {
-    // TODO: implement scrollToStart
-    scrollTo(0, animate);
   }
 }

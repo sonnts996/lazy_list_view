@@ -4,11 +4,11 @@
 */
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter/rendering.dart';
 import 'package:lazy_listview/models/functions.dart';
 import 'package:lazy_listview/models/lazy_state.dart';
 
 abstract class BaseLazyListView extends StatefulWidget {
-
   /// the limit value at which the scroll position executes the functions
   final double offset;
 
@@ -21,12 +21,12 @@ abstract class BaseLazyListView extends StatefulWidget {
   /// the function is called when the scroll position reaches
   /// a value in the offset at the end of the list.
   /// reach end state will be ignored when this object null.
-  final ControlFunction? onReachEnd;
+  final LazyReachFunction? onReachEnd;
 
   /// the function is called when the scroll position reaches
   /// a value in the offset at the start of the list.
   /// reach start state will be ignored when this object null.
-  final ControlFunction? onReachStart;
+  final LazyReachFunction? onReachStart;
 
   /// the function is called when the refresh indicator action
   /// the refresh indicator will be ignored when this object null.
@@ -36,12 +36,11 @@ abstract class BaseLazyListView extends StatefulWidget {
   final ScrollBackMode scrollBackMode;
 
   /// the widget display when the scroll back is active - outside the value of offset
-  final ScrollBackBuilder? scrollBackButtonBuilder;
+  final ScrollBackBuilder? scrollBackBuilder;
 
   /// scroll back widget alignment in stack
   final Alignment scrollBackButtonAlignment;
 
-  /// listview controller field
   /// request to check the scrolling state of the list
   final ScrollController scrollController;
 
@@ -93,13 +92,19 @@ abstract class BaseLazyListView extends StatefulWidget {
   /// listview itemExtent field
   final double? itemExtent;
 
+  /// listview shrinkWrap field
+  final bool shrinkWrap;
+
+  /// listview scrollDirection field
+  final Axis scrollDirection;
+
   const BaseLazyListView({
     Key? key,
     required this.scrollController,
     this.offset = 30,
     this.reachEndBuilder,
     this.reachStartBuilder,
-    this.scrollBackButtonBuilder,
+    this.scrollBackBuilder,
     this.onRefresh,
     this.onReachStart,
     this.onReachEnd,
@@ -121,5 +126,7 @@ abstract class BaseLazyListView extends StatefulWidget {
     this.keyboardDismissBehavior = ScrollViewKeyboardDismissBehavior.manual,
     this.restorationId,
     this.clipBehavior = Clip.hardEdge,
+    this.scrollDirection = Axis.vertical,
+    this.shrinkWrap = false,
   }) : super(key: key);
 }

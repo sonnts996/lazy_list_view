@@ -92,7 +92,6 @@ class _MyHomePageState extends State<MyHomePage> {
                     : Icons.arrow_circle_up_rounded),
               ),
               position: LazyPosition(top: 30, right: 0)),
-          controller: _scrollController,
           itemBuilder: (context, index) => ItemView(index: index),
           itemCount: 50,
         ));

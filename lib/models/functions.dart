@@ -9,7 +9,7 @@ import 'package:lazy_listview/models/scrollback.dart';
 
 /// call when get reach state, return true if the action done and clear the reach widget
 /// otherwise, the reach state was keep util call clearReach function.
-typedef ControlFunction = Future<bool> Function();
+typedef LazyReachFunction = Future<bool> Function();
 
 /// return scroll back widget and its position
 typedef ScrollBackBuilder = LazyScrollBack Function(
